@@ -21,3 +21,11 @@ docker run --gpus all -p 6006:6006 -p 8888:8888 -v [local]:/tf -itd tensorflow/t
 pip install pandas
 pip install xlrd
 ```
+
+## Training a model
+
+Running the command:
+
+```
+python abstractive_text_summarization_using_transformers.py
+```
