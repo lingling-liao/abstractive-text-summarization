@@ -29,3 +29,16 @@ Training a model:
 ```
 python abstractive_text_summarization_using_transformers.py
 ```
+
+## Using Hugging Face
+
+Install packages
+
+```
+pip install transformers
+pip install datasets
+
+# OpenAI GPT original tokenization workflow
+pip install spacy ftfy==4.4.3
+python -m spacy download en
+```
