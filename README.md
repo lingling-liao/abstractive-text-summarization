@@ -26,8 +26,6 @@ pip install xlrd
 
 ###### Training a model
 
-Running the command:
-
 ```
 python abstractive_text_summarization_using_transformers.py
 ```
