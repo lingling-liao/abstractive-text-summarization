@@ -35,8 +35,8 @@ python abstractive_text_summarization_using_transformers.py
 Install packages
 
 ```
-pip install transformers
-pip install datasets
+pip install transformers==4.0.1
+pip install datasets==1.1.3
 
 # OpenAI GPT original tokenization workflow
 pip install spacy ftfy==4.4.3
