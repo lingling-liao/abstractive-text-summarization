@@ -24,6 +24,12 @@ pip install pandas
 pip install xlrd
 ```
 
+Install tensorflow-datasets
+
+```
+pip install tensorflow-datasets==4.1.0
+```
+
 Training a model:
 
 ```
