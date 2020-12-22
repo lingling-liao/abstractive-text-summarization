@@ -17,7 +17,7 @@ docker run --gpus all -p 6006:6006 -p 8888:8888 -v [local]:/tf -itd tensorflow/t
 
 ## Using Transformer
 
-Install pandas & xlrd:
+Install pandas:
 
 ```
 pip install pandas
