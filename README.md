@@ -17,6 +17,8 @@ docker run --gpus all -p 6006:6006 -p 8888:8888 -v [local]:/tf -itd tensorflow/t
 
 ## Download sample data
 
+Multi-News, consists of news articles and human-written summaries of these articles from the site newser.com. Each summary is professionally written by editors and includes links to the original articles cited.
+
 https://drive.google.com/drive/folders/1A5S0LJhg5vPx13hmg67F1OsuLwRFn8ss?usp=sharing
 
 ## Using Transformer
