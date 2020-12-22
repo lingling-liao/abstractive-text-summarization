@@ -21,30 +21,10 @@ Install pandas & xlrd:
 
 ```
 pip install pandas
-pip install xlrd
-```
-
-Install tensorflow-datasets
-
-```
-pip install tensorflow-datasets==4.1.0
 ```
 
 Training a model:
 
 ```
 python abstractive_text_summarization_using_transformers.py
-```
-
-## Using Hugging Face
-
-Install packages
-
-```
-pip install transformers==4.0.1
-pip install datasets==1.1.3
-
-# OpenAI GPT original tokenization workflow
-pip install spacy ftfy==4.4.3
-python -m spacy download en
 ```
