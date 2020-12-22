@@ -391,7 +391,6 @@ def loss_function(real, pred):
 
 train_loss = tf.keras.metrics.Mean(name='train_loss')
 
-
 transformer = Transformer(
     num_layers,
     d_model,
