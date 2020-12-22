@@ -15,6 +15,10 @@ Running containers:
 docker run --gpus all -p 6006:6006 -p 8888:8888 -v [local]:/tf -itd tensorflow/tensorflow:2.3.0-gpu-jupyter
 ```
 
+## Download sample data
+
+https://drive.google.com/drive/folders/1A5S0LJhg5vPx13hmg67F1OsuLwRFn8ss?usp=sharing
+
 ## Using Transformer
 
 Install pandas:
