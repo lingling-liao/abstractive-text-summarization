@@ -52,13 +52,13 @@ class CreatingDatasetPipeline:
 
 # document: text of news articles seperated by special token "|||||".
 document = []
-with open('/tf/multi_news/test.src') as file:
+with open('/tf/multi_news/train.src') as file:
     for line in file:
         document.append(line[:-7])
 
 # summary: news summary.
 summary = []
-with open('/tf/multi_news/test.tgt') as file:
+with open('/tf/multi_news/train.tgt') as file:
     for line in file:
         summary.append(line[2:-1])
 
