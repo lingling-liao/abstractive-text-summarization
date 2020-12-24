@@ -6,14 +6,14 @@ import time
 
 
 document = []
-with open('/tf/multi_news/test.src') as file:
+with open('/tf/multi_news/train.src') as file:
     for line in file:
         # Text of news articles seperated by special token "|||||"
         document.append(line[:-7])
 document = pd.Series(document)
 
 summary = []
-with open('/tf/multi_news/test.tgt') as file:
+with open('/tf/multi_news/train.tgt') as file:
     for line in file:
         summary.append(line[2:-1])
 summary = pd.Series(summary)
