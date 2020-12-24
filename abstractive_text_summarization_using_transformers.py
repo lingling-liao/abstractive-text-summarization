@@ -5,71 +5,59 @@ import pandas as pd
 import time
 
 
-class CreatingDatasetPipeline:
-    
-    def set_up_data(self, document, summary, batch_size=64, buffer_size=20000,
-                    encoder_maxlen=400, decoder_maxlen=75):
-        self.encoder_maxlen = encoder_maxlen
-        self.decoder_maxlen = decoder_maxlen
-        document, summary = pd.Series(document), pd.Series(summary)
-
-        # Preprocessing for decoder sequence
-        summary = summary.apply(lambda m: '<go> ' + m + ' <stop>')
-
-        # Obtaining insights on lengths for defining maxlen
-        document_lengths = pd.Series([len(i) for i in document])
-        summary_lengths = pd.Series([len(i) for i in summary])
-
-        # Tokenizing the texts into integer tokens
-        document_tokenizer = tf.keras.preprocessing.text.Tokenizer()
-        document_tokenizer.fit_on_texts(document)
-        # Obtaining insights on lengths for defining maxlen
-        self.encoder_vocab_size = len(document_tokenizer.word_index) + 1
-        print(f'Encoder vocab size: {self.encoder_vocab_size}')
-
-        summary_tokenizer = tf.keras.preprocessing.text.Tokenizer(
-            filters='!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n')
-        summary_tokenizer.fit_on_texts(summary)
-        self.decoder_vocab_size = len(summary_tokenizer.word_index) + 1
-        print(f'Decoder vocab size: {self.decoder_vocab_size}')
-
-        inputs = document_tokenizer.texts_to_sequences(document)
-        # Padding/Truncating sequences for identical sequence lengths
-        inputs = tf.keras.preprocessing.sequence.pad_sequences(
-            inputs, maxlen=encoder_maxlen, padding='post', truncating='post')
-        # Creating dataset pipeline
-        inputs = tf.cast(inputs, dtype=tf.int32)
-
-        targets = summary_tokenizer.texts_to_sequences(summary)
-        targets = tf.keras.preprocessing.sequence.pad_sequences(
-            targets, maxlen=decoder_maxlen, padding='post', truncating='post')
-        targets = tf.cast(targets, dtype=tf.int32)
-
-        dataset = tf.data.Dataset.from_tensor_slices(
-            (inputs, targets)).shuffle(buffer_size).batch(batch_size)
-        return dataset, document_tokenizer, summary_tokenizer
-
-
-# document: text of news articles seperated by special token "|||||".
 document = []
-with open('/tf/multi_news/train.src') as file:
+with open('/tf/multi_news/test.src') as file:
     for line in file:
+        # Text of news articles seperated by special token "|||||"
         document.append(line[:-7])
+document = pd.Series(document)
 
-# summary: news summary.
 summary = []
-with open('/tf/multi_news/train.tgt') as file:
+with open('/tf/multi_news/test.tgt') as file:
     for line in file:
         summary.append(line[2:-1])
+summary = pd.Series(summary)
 
-cdp = CreatingDatasetPipeline()
-dataset, document_tokenizer, summary_tokenizer = cdp.set_up_data(document, summary)
 
-input_vocab_size = cdp.encoder_vocab_size
-target_vocab_size = cdp.decoder_vocab_size
+BATCH_SIZE = 64
+BUFFER_SIZE = 20000
+INPUT_MAXLEN = 400
+TARGET_MAXLEN = 75
 
-encoder_maxlen = cdp.encoder_maxlen
-decoder_maxlen = cdp.decoder_maxlen
+
+# Obtaining insights on lengths for defining maxlen
+document_lengths = pd.Series([len(i) for i in document])
+# Tokenizing the texts into integer tokens
+document_tokenizer = tf.keras.preprocessing.text.Tokenizer()
+document_tokenizer.fit_on_texts(document)
+# Obtaining insights on lengths for defining maxlen
+input_vocab_size = len(document_tokenizer.word_index) + 1
+print(f'Encoder vocab size: {input_vocab_size}')
+
+# Preprocessing for decoder sequence
+summary = summary.apply(lambda m: '<go> ' + m + ' <stop>')
+
+summary_lengths = pd.Series([len(i) for i in summary])
+summary_tokenizer = tf.keras.preprocessing.text.Tokenizer(
+    filters='!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n')
+summary_tokenizer.fit_on_texts(summary)
+target_vocab_size = len(summary_tokenizer.word_index) + 1
+print(f'Decoder vocab size: {target_vocab_size}')
+
+inputs = document_tokenizer.texts_to_sequences(document)
+# Padding/Truncating sequences for identical sequence lengths
+inputs = tf.keras.preprocessing.sequence.pad_sequences(
+    inputs, maxlen=INPUT_MAXLEN, padding='post', truncating='post')
+# Creating dataset pipeline
+inputs = tf.cast(inputs, dtype=tf.int32)
+
+targets = summary_tokenizer.texts_to_sequences(summary)
+targets = tf.keras.preprocessing.sequence.pad_sequences(
+    targets, maxlen=TARGET_MAXLEN, padding='post', truncating='post')
+targets = tf.cast(targets, dtype=tf.int32)
+
+dataset = tf.data.Dataset.from_tensor_slices(
+    (inputs, targets)).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 
 
 def get_angles(pos, i, d_model):
@@ -349,10 +337,10 @@ class Transformer(tf.keras.Model):
         return final_output, attention_weights
 
 
-num_layers = 4
-d_model = 128
-dff = 512
-num_heads = 8
+NUM_LAYERS = 4
+D_MODEL = 128
+DFF = 512
+NUM_HEADS = 8
 
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
@@ -371,7 +359,7 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
         return tf.math.rsqrt(self.d_model) * tf.math.minimum(arg1, arg2)
 
 
-learning_rate = CustomSchedule(d_model)
+learning_rate = CustomSchedule(D_MODEL)
 
 optimizer = tf.keras.optimizers.Adam(
     learning_rate, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
@@ -392,10 +380,10 @@ def loss_function(real, pred):
 train_loss = tf.keras.metrics.Mean(name='train_loss')
 
 transformer = Transformer(
-    num_layers,
-    d_model,
-    num_heads,
-    dff,
+    NUM_LAYERS,
+    D_MODEL,
+    NUM_HEADS,
+    DFF,
     input_vocab_size,
     target_vocab_size,
     pe_input=input_vocab_size,
@@ -419,13 +407,13 @@ def create_masks(inp, tar):
     return enc_padding_mask, combined_mask, dec_padding_mask
 
 
-checkpoint_path = './checkpoints/train'
+CHECKPOINT_PATH = './checkpoints/train'
 
 ckpt = tf.train.Checkpoint(
     transformer=transformer, optimizer=optimizer)
 
 ckpt_manager = tf.train.CheckpointManager(
-    ckpt, checkpoint_path, max_to_keep=5)
+    ckpt, CHECKPOINT_PATH, max_to_keep=5)
 
 # if a checkpoint exists, restore the latest checkpoint.
 if ckpt_manager.latest_checkpoint:
@@ -433,7 +421,8 @@ if ckpt_manager.latest_checkpoint:
     print('Latest checkpoint restored!')
 
 
-epochs = 3
+EPOCHS = 3
+
 
 @tf.function
 def train_step(inp, tar):
@@ -454,11 +443,10 @@ def train_step(inp, tar):
     
     gradients = tape.gradient(loss, transformer.trainable_variables)
     optimizer.apply_gradients(zip(gradients, transformer.trainable_variables))
-    
     train_loss(loss)
 
 
-for epoch in range(epochs):
+for epoch in range(EPOCHS):
     start = time.time()
     
     train_loss.reset_states()
@@ -483,13 +471,13 @@ for epoch in range(epochs):
 def evaluate(inp_document):
     inp_document = document_tokenizer.texts_to_sequences([inp_document])
     inp_document = tf.keras.preprocessing.sequence.pad_sequences(
-        inp_document, maxlen=encoder_maxlen, padding='post', truncating='post')
+        inp_document, maxlen=INPUT_MAXLEN, padding='post', truncating='post')
     
     encoder_inp = tf.expand_dims(inp_document[0], 0)
     decoder_inp = [summary_tokenizer.word_index['<go>']]
     output = tf.expand_dims(decoder_inp, 0)
     
-    for i in range(decoder_maxlen):
+    for i in range(TARGET_MAXLEN):
         enc_padding_mask, combined_mask, dec_padding_mask = create_masks(
             encoder_inp, output)
         
@@ -515,7 +503,7 @@ def summarize(inp_document):
     return summary_tokenizer.sequences_to_texts(summ)[0]
 
 
-document = ("Let’s start with the crossbow, because the crossbow is huge. "
+DOCUMENT = ("Let’s start with the crossbow, because the crossbow is huge. "
             "I’m sitting in the passenger seat of a camo-painted ATV, rumbling "
             "through the northern Louisiana backwoods with Phil Robertson, "
             "founder of the Duck Commander company, patriarch at the heart of "
@@ -523,5 +511,5 @@ document = ("Let’s start with the crossbow, because the crossbow is huge. "
             "afternoon. There are seat belts in this ATV, but it doesn’t look "
             "like they’ve ever been used.")
 
-print('Document:\n', document)
-print('Summary:\n', summarize(document))
+print('Document:\n', DOCUMENT)
+print('Summary:\n', summarize(DOCUMENT))
